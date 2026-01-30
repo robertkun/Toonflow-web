@@ -17,7 +17,10 @@ class WsClient {
   private retries = 0;
 
   constructor(url: string, options: WsOptions = {}) {
-    this.url = import.meta.env.VITE_WS_URL + url;
+    const fullUrl = new URL(url, import.meta.env.VITE_WS_URL);
+    const token = localStorage.getItem("token");
+    if (token) fullUrl.searchParams.set("token", token);
+    this.url = fullUrl.toString();
     this.options = options;
     this.connect();
   }

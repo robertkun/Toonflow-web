@@ -129,11 +129,25 @@
             </div>
             <div class="formItem" v-if="key !== 'imageModel' || settingData[key].manufacturer === 'openAi'">
               <label class="formLabel">BaseURL</label>
-              <a-input v-model:value="settingData[key].baseURL" :placeholder="`请输入${modelRecordName[key]}的BaseURL`" class="formInput" />
+              <a-input 
+                v-model:value="settingData[key].baseURL" 
+                :placeholder="`请输入${modelRecordName[key]}的BaseURL`" 
+                class="formInput" 
+                :class="{ 'input-error': key === 'languageModel' && baseURLError }"
+                @input="key === 'languageModel' && validateBaseURL()" />
+              <span class="formError" v-if="key === 'languageModel' && baseURLError">{{ baseURLError }}</span>
+              <span class="formHint" v-else-if="key === 'languageModel'">提示：只需填写到 /v1/ 为止，例如 https://api.openai.com/v1/</span>
             </div>
             <div class="formItem">
               <label class="formLabel">API Key</label>
               <a-input-password v-model:value="settingData[key].apiKey" :placeholder="`请输入${modelRecordName[key]}的API Key`" class="formInput" />
+            </div>
+            <!-- 语言模型测试按钮 -->
+            <div class="formItem" v-if="key === 'languageModel'">
+              <a-button type="primary" :loading="testingAI" @click="testLanguageModel" class="testBtn">
+                <i-check-one v-if="!testingAI" theme="outline" size="14" fill="currentColor" />
+                检查AI是否可用
+              </a-button>
             </div>
           </div>
         </div>
@@ -299,6 +313,8 @@ const videoModalList = ref<ConfigForm[]>([]);
 const sqlShow = ref(false);
 const sqlString = ref("");
 const promptEditorShow = ref(false);
+const testingAI = ref(false);
+const baseURLError = ref("");
 
 async function doExecSQL() {
   try {
@@ -369,6 +385,56 @@ function handleModalDelete(data: ConfigForm) {
 
 function handleChange(key: ModelKey) {
   // 可扩展的厂商切换逻辑
+}
+
+// 校验 BaseURL 格式
+function validateBaseURL() {
+  const url = settingData.value.languageModel.baseURL;
+  if (!url) {
+    baseURLError.value = "";
+    return true;
+  }
+  
+  // 检查是否包含 /v1/ 后面还有其他路径
+  const v1Index = url.indexOf("/v1/");
+  if (v1Index !== -1) {
+    const afterV1 = url.substring(v1Index + 4); // 获取 /v1/ 后面的内容
+    if (afterV1 && afterV1 !== "/" && afterV1.replace(/\/+$/, "") !== "") {
+      baseURLError.value = "错误：BaseURL 只需填写到 /v1/ 为止，请勿添加后续路径";
+      return false;
+    }
+  }
+  
+  baseURLError.value = "";
+  return true;
+}
+
+// 测试语言模型连接
+async function testLanguageModel() {
+  const { model, apiKey, baseURL } = settingData.value.languageModel;
+
+  if (!model) {
+    message.warning("请先填写模型名称");
+    return;
+  }
+  if (!apiKey) {
+    message.warning("请先填写 API Key");
+    return;
+  }
+
+  testingAI.value = true;
+  try {
+    await axios.post("/other/testAI", {
+      modelName: model,
+      apiKey: apiKey,
+      baseURL: baseURL || undefined,
+    });
+    message.success("连接成功！模型配置正确");
+  } catch (e: any) {
+    message.error(`连接失败: ${e.message}`);
+  } finally {
+    testingAI.value = false;
+  }
 }
 
 function getModelIconClass(key: ModelKey): string {
@@ -799,6 +865,28 @@ async function clearDatabase() {
   font-size: 13px;
   font-weight: 500;
   color: #4b5563;
+}
+
+.formHint {
+  font-size: 12px;
+  color: #9ca3af;
+  margin-top: 4px;
+}
+
+.formError {
+  font-size: 12px;
+  color: #ef4444;
+  margin-top: 4px;
+}
+
+.input-error {
+  border-color: #ef4444 !important;
+}
+
+.input-error:focus,
+.input-error:focus-within {
+  border-color: #ef4444 !important;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1) !important;
 }
 
 .formInput {

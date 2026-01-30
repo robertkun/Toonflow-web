@@ -245,8 +245,9 @@ function initWsClient() {
 
 // 处理 WebSocket 消息
 function handleWsMessage(msgData: { type: string; data: any }) {
-  // 只有非 transfer 消息时才移除 thinking 消息
-  if (!msgData.data?.to) {
+  // 只有 AI 响应相关的消息才移除 thinking 消息
+  const responseTypes = ["stream", "response", "response_end", "subAgentStream", "subAgentEnd"];
+  if (responseTypes.includes(msgData.type)) {
     removeThinkingMessage();
   }
 
