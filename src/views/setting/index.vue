@@ -1,49 +1,21 @@
 <template>
   <div class="settingContainer">
     <span>设置</span>
-    <div class="addModel">
-      <a-button style="margin-bottom: 10px" type="primary" ghost @click="addModelBtn">新增模型</a-button>
-      <vxe-table :data="tableData">
-        <vxe-column field="name" title="名称" width="100"></vxe-column>
-        <vxe-column field="manufacturer" title="厂商" width="100"></vxe-column>
-        <vxe-column field="type" title="类型" width="150"></vxe-column>
-        <vxe-column field="model" title="模型" width="150"></vxe-column>
-        <vxe-column field="baseUrl" title="Base URL"></vxe-column>
-        <vxe-column field="apiKey" title="API Key">
-          <template #default="{ row }">
-            <div class="f">
-              <div style="margin-right: 8px; font-size: 15px">
-                {{ visibleMap[row.id] ? row.apiKey : "********" }}
-              </div>
-              <i-preview-open
-                v-if="!visibleMap[row.id]"
-                theme="outline"
-                size="20"
-                fill="#9b9b9b"
-                style="cursor: pointer"
-                @click="setVisible(row.id, true)" />
-              <i-preview-close v-else theme="outline" size="20" fill="#9b9b9b" style="cursor: pointer" @click="setVisible(row.id, false)" />
-            </div>
-          </template>
-        </vxe-column>
-        <vxe-column field="createTime" title="创建时间" width="160">
-          <template #default="{ row }">
-            <div>{{ dayjs(row.createTime).format("YYYY-MM-DD HH:mm:ss") }}</div>
-          </template>
-        </vxe-column>
-        <vxe-column :min-width="40" title="操作" align="center" width="200" show-overflow>
-          <template #default="{ row }">
-            <el-button type="info" size="small" @click="editModelBtn(row)">编辑</el-button>
-            <el-button type="danger" size="small" style="margin-left: 10px" @click="delModelBtn(row)">删除</el-button>
-          </template>
-        </vxe-column>
-      </vxe-table>
-    </div>
     <div class="model">
-      <h1 style="font-size: 18px; margin-top: 10px; display: block">模型列表</h1>
-      <div v-for="(item, index) in modelData" :key="index">
-        <div class="modelData">
-          
+      <div class="jb c" style="margin-top: 10px">
+        <h1 style="font-size: 18px; display: block">模型列表</h1>
+      </div>
+      <div class="f w" style="gap: 10px">
+        <div v-for="(item, index) in modelData" :key="index">
+          <a-card hoverable :title="item.name" style="width: 300px">
+            <template #extra>
+              <div class="card-actions">
+                <a-button type="primary" size="small" @click="startConfig(item)">配置</a-button>
+              </div>
+            </template>
+            <span style="font-size: 15px" v-if="item.model">{{ item.model }}</span>
+            <span style="font-size: 15px" v-else>未配置</span>
+          </a-card>
         </div>
       </div>
     </div>
@@ -94,7 +66,6 @@
                 </div>
               </div>
               <p class="aboutDesc">ToonFlow 是一款开源的 AI 驱动漫画/分镜创作工具，帮助创作者快速生成故事分镜和视频内容。</p>
-
               <div class="aboutLinks">
                 <div class="linkItem">
                   <div class="linkIcon">
@@ -161,91 +132,43 @@
         </a-card>
       </div>
     </div>
-    <newAddModel v-model:modelShow="modelShow" v-model:modelForm="modelForm" :state="state" />
     <PromptEditor v-model="promptEditorShow" />
+    <newModelData v-model:modelDataShow="modelDataShow" v-model:configingModel="configingModel" @modelList="modelList"  />
   </div>
 </template>
 
 <script setup lang="ts">
-import dayjs from "dayjs";
 import axios from "@/utils/axios";
 import { message, Modal } from "ant-design-vue";
-import newAddModel from "./components/addModel.vue";
 import PromptEditor from "./components/promptEditor.vue";
+import newModelData from "./components/modelData.vue";
 interface RowData {
+  id: number;
   name: string;
   type: string;
   model: string;
   baseUrl: string;
   manufacturer: string;
-  createTime: string;
+  createTime: number;
   apiKey: string;
 }
 const promptEditorShow = ref(false);
-const visibleMap = reactive<Record<string | number, boolean>>({});
-function setVisible(id: string | number, val: boolean) {
-  visibleMap[id] = val;
-}
-const tableData = ref<RowData[]>([
-  {
-    name: "默认模型",
-    type: "聊天模型",
-    model: "gpt-3.5-turbo",
-    apiKey: "213232323232323",
-    baseUrl: "https://api.openai.com/v1",
-    manufacturer: "OpenAI",
-    createTime: "2024-01-01 12:00:00",
-  },
-]);
-
-const modelData = ref([
-  {
-    code: "",
-    name: "",
-    model: "",
-  },
-]);
-
-//查询模型列表
-async function fetchModelList() {}
-
-//模型表单数据
-const modelForm = ref<RowData>({
-  name: "",
-  type: "",
-  model: "",
-  apiKey: "",
-  baseUrl: "",
-  manufacturer: "",
-  createTime: "",
+const modelData = ref<{ id: number; promptsId: number; code: string; model: string; name: string }[]>([]);
+onMounted(() => {
+  modelList();
 });
-const state = ref("");
-const modelShow = ref(false);
-//新增模型
-function addModelBtn() {
-  state.value = "新增模型";
-  modelForm.value = {
-    name: "",
-    type: "",
-    model: "",
-    apiKey: "",
-    baseUrl: "",
-    manufacturer: "",
-    createTime: "",
-  };
-  modelShow.value = true;
+
+async function modelList() {
+  const res = await axios.post("/setting/getAiModelMap");
+  modelData.value = res.data;
 }
-//编辑模型
-function editModelBtn(row: RowData) {
-  state.value = "编辑模型";
-  modelForm.value = { ...row };
-  modelShow.value = true;
+const modelDataShow = ref(false);
+const configingModel = ref<{ id: number; promptsId: number; code: string; model: string; name: string }>();
+// 开始配置
+function startConfig(item: { id: number; promptsId: number; code: string; model: string; name: string }) {
+  configingModel.value = item;
+  modelDataShow.value = true;
 }
-//删除模型
-function delModelBtn(row: RowData) {
-  console.log("删除模型", row);
-}
-const selectedShow = ref(false);
 
 //其他配置
 function showDoubleConfirm2(step = 1): Promise<boolean> {
@@ -376,12 +299,15 @@ function openLicense() {
   }
   .model {
     .modelData {
+      width: 250px;
+      height: 100px;
+      padding: 10px;
+      border-radius: 15px;
+      border: 1px solid rgb(218, 216, 216);
     }
   }
   .other {
     margin-top: 16px;
-    flex: 1 1 auto;
-    overflow: auto;
     -webkit-overflow-scrolling: touch;
     .otherConfiguration {
       font-size: 18px;

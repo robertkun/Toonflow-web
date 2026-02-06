@@ -348,8 +348,6 @@ function handleModalDelete(data: ConfigForm) {
   updateSetting();
 }
 
-type ModelKey = "languageModel" | "imageModel" | "videoModel";
-
 interface ModelDataType {
   model: string;
   apiKey: string;

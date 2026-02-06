@@ -58,6 +58,8 @@
 
 <script setup lang="ts">
 import { ref, computed } from "vue";
+import axios from "@/utils/axios";
+import { message } from "ant-design-vue";
 import type { SelectProps } from "ant-design-vue";
 
 const modelShow = defineModel<boolean>("modelShow", {
@@ -75,12 +77,13 @@ const props = defineProps({
 });
 
 interface RowData {
+  id: number;
   name: string;
   type: string;
   model: string;
   baseUrl: string;
   manufacturer: string;
-  createTime: string;
+  createTime: number;
   apiKey: string;
 }
 //模型类型选项
@@ -343,11 +346,44 @@ const currentModelPresets = computed(() => {
 
   return presets[type as keyof typeof presets] || [];
 });
+const emit = defineEmits(["fetchModelList"]);
 //保存模型
-const keep = () => {
-  console.log("保存的模型信息:", modelForm.value);
+async function keep() {
+  if (modelForm.value.id == 0) {
+    try {
+      await axios.post("/setting/addModel", {
+        name: modelForm.value.name,
+        type: modelForm.value.type,
+        model: modelForm.value.model,
+        baseUrl: modelForm.value.baseUrl,
+        manufacturer: modelForm.value.manufacturer,
+        apiKey: modelForm.value.apiKey,
+      });
+      message.success("新增成功");
+      emit("fetchModelList");
+    } catch (e) {
+      message.error("新增失败");
+    }
+  } else {
+    try {
+      await axios.post("/setting/updeteModel", {
+        id: modelForm.value.id,
+        name: modelForm.value.name,
+        type: modelForm.value.type,
+        model: modelForm.value.model,
+        baseUrl: modelForm.value.baseUrl,
+        manufacturer: modelForm.value.manufacturer,
+        apiKey: modelForm.value.apiKey,
+      });
+      message.success("编辑成功");
+      emit("fetchModelList");
+    } catch (e) {
+      message.error("编辑失败");
+    }
+  }
+
   modelShow.value = false; //关闭弹窗
-};
+}
 </script>
 
 <style lang="scss" scoped></style>
