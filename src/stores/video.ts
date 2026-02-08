@@ -16,7 +16,7 @@ export interface VideoConfig {
   model: string;
   aiConfigId: number | undefined;
   manufacturer: string;
-  mode: "startEnd" | "multi" | "single";
+  mode: "startEnd" | "multi" | "single" | "text";
   startFrame: ImageItem | null;
   endFrame: ImageItem | null;
   images: ImageItem[];
@@ -153,6 +153,7 @@ export default defineStore(
     async function fetchVideoConfigs(scriptId: number) {
       try {
         const { data } = await axios.post("/video/getVideoConfigs", { scriptId });
+        console.log("%c Line:156 🍞 data", "background:#ffdd4d", data);
         if (data && Array.isArray(data)) {
           // 过滤掉当前脚本的旧配置
           videoConfigs.value = [];
@@ -267,6 +268,8 @@ export default defineStore(
         if (config.endFrame) videoImgs.push(config.endFrame.filePath);
       } else if (config.mode === "single") {
         if (config.startFrame) videoImgs.push(config.startFrame.filePath);
+      } else if (config.mode == "text") {
+        videoImgs.length = 0;
       } else {
         config.images.forEach((img) => videoImgs.push(img.filePath));
       }
@@ -275,6 +278,7 @@ export default defineStore(
       const { data } = await axios.post("/video/generateVideo", {
         projectId: config.projectId,
         scriptId: config.scriptId,
+        mode: config.mode,
         aiConfigId: config.aiConfigId,
         configId: configId, // 关联配置ID
         resolution: config.resolution,
@@ -324,7 +328,7 @@ export default defineStore(
     // 更新配置（包括图片字段）
     function updateConfigFull(
       configId: number,
-      updates: Partial<Pick<VideoConfig, "prompt" | "resolution" | "duration" | "startFrame" | "endFrame" | "images">>,
+      updates: Partial<Pick<VideoConfig, "prompt" | "resolution" | "duration" | "startFrame" | "endFrame" | "images" | "mode">>,
     ) {
       const config = videoConfigs.value.find((c) => c.id === configId);
       if (config) {
@@ -334,6 +338,7 @@ export default defineStore(
         if (updates.startFrame !== undefined) config.startFrame = updates.startFrame;
         if (updates.endFrame !== undefined) config.endFrame = updates.endFrame;
         if (updates.images !== undefined) config.images = [...updates.images];
+        if (updates.mode !== undefined) config.mode = updates.mode;
       }
     }
 

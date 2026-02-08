@@ -36,7 +36,21 @@
 
               <!-- 已选择结果且成功 -->
               <template v-else-if="getSelectedResult(config.id)?.state === 1">
-                <img :src="getSelectedResult(config.id)?.firstFrame || getSelectedResult(config.id)?.filePath" class="cover-image" alt="视频封面" />
+                <img
+                  v-if="getSelectedResult(config.id)?.firstFrame"
+                  :src="getSelectedResult(config.id)?.firstFrame"
+                  class="cover-image"
+                  alt="视频封面" />
+                <video
+                  v-else-if="getSelectedResult(config.id)?.filePath"
+                  :src="getSelectedResult(config.id)?.filePath"
+                  class="cover-image"
+                  preload="metadata"></video>
+                <div v-else class="video-placeholder">
+                  <i-film :size="32" />
+                  <span>视频</span>
+                </div>
+                <!-- <img :src="getSelectedResult(config.id)?.firstFrame || getSelectedResult(config.id)?.filePath" class="cover-image" alt="视频封面" /> -->
                 <div class="play-overlay">
                   <div class="play-button">
                     <i-play-one theme="filled" :size="32" fill="#fff" />
@@ -272,6 +286,7 @@ function handleDeleteConfig(configId: number) {
 
         .play-overlay {
           opacity: 1;
+          z-index: 9999999999;
         }
 
         .cover-image {

@@ -600,11 +600,9 @@ function getManufacturerSupportedResolutions(
     manufacturerModels = manufacturerModels.filter((m) => m.model === model);
   }
 
-  const allAspectRatios = new Set<string>();
   const allResolutions = new Set<string>();
 
   manufacturerModels.forEach((model) => {
-    model.aspectRatio.forEach((ratio) => allAspectRatios.add(ratio));
     model.durationResolutionMap.forEach((map) => {
       map.resolution.forEach((res) => allResolutions.add(res));
     });
@@ -617,12 +615,6 @@ function getManufacturerSupportedResolutions(
     resolutions = Array.from(allResolutions).map((res) => ({
       label: res,
       value: res,
-    }));
-  } else if (allAspectRatios.size > 0) {
-    resolutionLabel = "画面比例";
-    resolutions = Array.from(allAspectRatios).map((ratio) => ({
-      label: ratio === "16:9" ? "16:9 横屏" : ratio === "9:16" ? "9:16 竖屏" : ratio,
-      value: ratio,
     }));
   }
   return { resolutions, resolutionLabel };
@@ -688,7 +680,7 @@ function getManufacturerMaxImages(manufacturer: string, model?: string): number 
 
   manufacturerModels.forEach((model) => {
     if (model.type.includes("multiImage")) {
-      maxImages = Math.max(maxImages, 4);
+      maxImages = Math.max(maxImages, 9);
     } else if (model.type.includes("startEndRequired") || model.type.includes("endFrameOptional")) {
       maxImages = Math.max(maxImages, 2);
     }
@@ -755,12 +747,6 @@ export function getModelBasedConfig(modelConfig: ModelConfig): ManufacturerConfi
       label: res,
       value: res,
     }));
-  } else if (modelConfig.aspectRatio.length > 0) {
-    resolutionLabel = "画面比例";
-    resolutions = modelConfig.aspectRatio.map((ratio) => ({
-      label: ratio === "16:9" ? "16:9 横屏" : ratio === "9:16" ? "9:16 竖屏" : ratio,
-      value: ratio,
-    }));
   }
 
   // 从 durationResolutionMap 生成 durationOptions
@@ -789,7 +775,7 @@ export function getModelBasedConfig(modelConfig: ModelConfig): ManufacturerConfi
   // 根据 type 确定 maxImages
   let maxImages = 1;
   if (modelConfig.type.includes("multiImage")) {
-    maxImages = 4;
+    maxImages = 9;
   } else if (modelConfig.type.includes("startEndRequired") || modelConfig.type.includes("endFrameOptional")) {
     maxImages = 2;
   }

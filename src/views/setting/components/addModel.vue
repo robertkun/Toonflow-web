@@ -117,6 +117,11 @@ const manufacturerDefaultBaseUrls: Record<string, Record<string, string>> = {
     image: "",
     video: "",
   },
+  runninghub: {
+    text: "",
+    image: "",
+    video: "",
+  },
   other: {
     text: "",
     image: "",

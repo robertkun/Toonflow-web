@@ -47,7 +47,12 @@
             <!-- 成功状态 -->
             <template v-if="result.state === 1">
               <div class="video-cover" @click.stop="playVideo(result)">
-                <img :src="result.firstFrame || result.filePath" alt="视频封面" />
+                <img v-if="result.firstFrame" :src="result.firstFrame" alt="视频封面" />
+                <video v-else-if="result.filePath" :src="result.filePath" preload="metadata"></video>
+                <div v-else class="video-placeholder">
+                  <i-film :size="32" />
+                  <span>视频</span>
+                </div>
                 <div class="play-overlay">
                   <i-play-one theme="filled" :size="24" fill="#fff" />
                 </div>
@@ -181,6 +186,7 @@ async function handleConfigFormChange(updatedConfig: VideoConfigData) {
     startFrame: updatedConfig.startFrame,
     endFrame: updatedConfig.endFrame,
     images: updatedConfig.images,
+    mode: updatedConfig.mode,
   });
 
   // 调用后端接口更新配置
@@ -340,10 +346,28 @@ watch(videoPlayerVisible, (visible) => {
           height: 140px;
           overflow: hidden;
 
-          img {
+          img,
+          video {
             width: 100%;
             height: 100%;
             object-fit: cover;
+          }
+
+          .video-placeholder {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #f3e8ff, #e9d5ff);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            color: #9333ea;
+
+            span {
+              font-size: 13px;
+              font-weight: 500;
+            }
           }
 
           .play-overlay {
