@@ -16,11 +16,16 @@ import ElementPlus from "element-plus";
 import "element-plus/dist/index.css";
 import zhCn from "element-plus/es/locale/lang/zh-cn";
 
+import MateChat from "@matechat/core";
+
+import "@devui-design/icons/icomoon/devui-icon.css";
+
 const app = createApp(App);
 install(app, "i");
 app.use(DatePicker);
 app.use(createPinia().use(piniaPluginPersistedstate));
 app.use(router);
+app.use(MateChat);
 app.use(VxeUITable);
 app.use(ElementPlus, { locale: zhCn });
 app.use(VxeUIAll);

@@ -6,26 +6,87 @@
 
   <!-- 对话消息 -->
   <div v-else class="message-wrapper" :class="[msg.identity === 'user' ? 'user' : 'assistant']">
+    <!-- AI 头像 -->
+    <div class="avatar" v-if="msg.identity === 'assistant'">
+      <a-avatar :size="36" class="ai-avatar">
+        <template #icon>
+          <span class="avatar-text">{{ msg.role?.[0] || "AI" }}</span>
+        </template>
+      </a-avatar>
+    </div>
+
     <!-- 消息内容 -->
     <div class="message-content-wrapper">
+      <!-- AI 消息 - 使用解析后的数据 -->
       <template v-if="msg.identity === 'assistant' && parsedData">
-        <div v-for="item in parsedData" :key="item.index">
-          <McBubble v-if="item.type === 'text'" :avatarConfig="{ imgSrc: logo, displayName: msg.role }" :avatarPosition="'top'" :variant="'bordered'">
-            <McMarkdownCard :enableThink="true" :content="item.content" :theme="theme"></McMarkdownCard>
-          </McBubble>
-          <McBubble
-            v-if="item.type === 'thinking'"
-            :loading="true"
-            :avatarConfig="{ imgSrc: logo, displayName: msg.role }"
-            :avatarPosition="'top'"></McBubble>
+        <div v-for="item in parsedData" :key="item.index" class="message-bubble assistant-bubble">
+          <!-- 文本消息（包含思考解析） -->
+          <template v-if="item.type === 'text'">
+            <!-- 思考过程折叠块 -->
+            <div v-if="item.thinking" class="thinking-block">
+              <div class="thinking-block-header" @click="toggleThinking(item.index)">
+                <span class="thinking-icon">💭</span>
+                <span class="thinking-title">思考过程</span>
+                <span class="thinking-toggle" :class="{ collapsed: isCollapsed(item.index) }">
+                  <DownOutlined />
+                </span>
+              </div>
+              <Transition name="collapse">
+                <div v-show="!isCollapsed(item.index)" class="thinking-block-content">
+                  <div class="thinking-text">{{ item.thinking }}</div>
+                </div>
+              </Transition>
+            </div>
+            <!-- 正文内容 -->
+            <span v-if="item.content" class="text-content">{{ item.content }}</span>
+          </template>
+
+          <!-- 图片消息 -->
+          <a-image
+            v-if="item.type === 'image_url' && item.image_url"
+            class="image-content"
+            :src="item.image_url.url"
+            :preview-src="item.image_url.url" />
+
+          <!-- 带确认的消息 -->
+          <div v-if="item.type === 'textWithConfirm'" class="confirm-content">
+            <p class="confirm-text">{{ item.text }}</p>
+
+            <div class="confirm-actions" v-if="item.confirm === undefined">
+              <a-button
+                v-for="sub in item.button"
+                :key="sub.text"
+                @click="handleClick(sub, item as any)"
+                size="small"
+                :type="sub.type ?? 'default'"
+                class="confirm-btn">
+                {{ sub.text }}
+              </a-button>
+            </div>
+
+            <div v-else class="confirm-result">
+              <div class="result-icon" :class="item.confirm ? 'success' : 'error'">
+                <i-check-one v-if="item.confirm" size="18" />
+                <i-close-one v-else size="18" />
+              </div>
+              <span class="result-text">{{ item.confirm ? "已确认" : "已取消" }}</span>
+            </div>
+          </div>
+
+          <!-- 思考中动画 -->
+          <div v-if="item.type === 'thinking'" class="thinking-content">
+            <span class="thinking-dot"></span>
+            <span class="thinking-dot"></span>
+            <span class="thinking-dot"></span>
+          </div>
         </div>
       </template>
+
+      <!-- 用户消息 -->
       <template v-else>
-        <div v-for="(item, index) in msg.data" :key="index">
-          <McBubble v-if="item.type === 'text'" :align="'right'">
-            <McMarkdownCard :enableThink="true" :content="item.text" :theme="theme"></McMarkdownCard>
-          </McBubble>
-          <McBubble v-if="item.type === 'image_url'" :content="item.image_url" :align="'right'"></McBubble>
+        <div v-for="(item, index) in msg.data" :key="index" class="message-bubble user-bubble">
+          <span v-if="item.type === 'text'" class="text-content">{{ item.text }}</span>
+          <a-image v-if="item.type === 'image_url'" class="image-content" :src="item.image_url.url" :preview-src="item.image_url.url" />
         </div>
       </template>
     </div>
@@ -33,10 +94,8 @@
 </template>
 
 <script setup lang="ts">
-import logo from "@/assets/logo.svg";
 import { computed, reactive } from "vue";
 import { UserOutlined, DownOutlined } from "@ant-design/icons-vue";
-const theme = ref("light");
 
 const props = defineProps<{
   msg: ChatMessage;
