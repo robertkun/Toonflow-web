@@ -132,7 +132,12 @@
                       编辑
                     </a-button>
                   </a-tooltip>
-                  <a-popconfirm title="确定要删除此模型吗？" ok-text="确定" cancel-text="取消" @confirm="delModelBtn(row)">
+                  <a-popconfirm
+                    title="确定要删除此模型吗？"
+                    style="z-index: 99999999999999999999"
+                    ok-text="确定"
+                    cancel-text="取消"
+                    @confirm="delModelBtn(row)">
                     <a-tooltip title="删除模型">
                       <a-button danger size="small" class="action-btn delete-btn">
                         <template #icon>

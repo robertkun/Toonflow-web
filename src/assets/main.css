@@ -32,7 +32,9 @@ body,
   font-style: normal;
   text-transform: none;
 }
-
+.ant-popover {
+  z-index: 99999999999999999999 !important;
+}
 * {
   box-sizing: border-box;
 }
