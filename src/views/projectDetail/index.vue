@@ -82,6 +82,7 @@ function onBack() {
 
 <style lang="scss" scoped>
 .projectDetail {
+  min-width: 800px;
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -134,6 +135,7 @@ function onBack() {
     }
 
     .nav {
+      margin-top: 5px;
       display: flex;
       gap: 8px;
       overflow-x: auto;
@@ -172,8 +174,8 @@ function onBack() {
   .main {
     height: calc(100vh - 100px);
     overflow: auto;
-    padding-left: 10rem;
-    padding-right: 10rem;
+    padding-left: 5%;
+    padding-right: 5%;
     padding-bottom: 50px;
   }
 }

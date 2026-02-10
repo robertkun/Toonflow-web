@@ -62,7 +62,7 @@
                 <img src="@/assets/logo.png" alt="ToonFlow Logo" class="logoImg" />
                 <div class="appInfo">
                   <h2 class="appName">ToonFlow</h2>
-                  <span class="appVersion">v1.0.0</span>
+                  <span class="appVersion">v1.0.6</span>
                 </div>
               </div>
               <p class="aboutDesc">ToonFlow 是一款开源的 AI 驱动漫画/分镜创作工具，帮助创作者快速生成故事分镜和视频内容。</p>
